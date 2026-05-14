@@ -5,16 +5,17 @@
 <div class="row justify-content-center">
 <div class="col-md-8">
 
-<div class="card mb-4">
-<div class="card-header bg-primary text-white"><b>粘贴客户信息，自动解析</b></div>
-<div class="card-body">
-<textarea id="rawText" class="form-control" rows="4" placeholder="粘贴聊天记录，例：你好，我是南京大学的张伟，电话13800001111，想咨询冷冻研磨仪"></textarea>
-<button class="btn btn-success w-100 mt-3" onclick="parseText()">智能解析</button>
+<div class="card mb-3">
+<div class="card-body py-2">
+<div class="input-group">
+<input type="text" id="rawText" class="form-control" placeholder="粘贴客户聊天记录，例：南京大学张伟13800001111咨询冷冻研磨仪">
+<button class="btn btn-success" onclick="parseText()">解析</button>
+</div>
 </div>
 </div>
 
 <div class="card">
-<div class="card-header bg-success text-white"><b>解析结果（可修改后提交）</b></div>
+<div class="card-header bg-success text-white"><b>客户信息</b></div>
 <div class="card-body">
 {% with messages = get_flashed_messages(with_categories=true) %}
 {% for cat, msg in messages %}
@@ -32,7 +33,7 @@
 <div class="row">
 <div class="col-md-4 mb-2"><label class="form-label">省份 <span class="text-danger">*</span></label><select id="f_province" name="province" class="form-select" required><option value="">请选择</option>{% for p in provinces %}<option value="{{ p }}">{{ p }}</option>{% endfor %}</select></div>
 <div class="col-md-4 mb-2"><label class="form-label">城市</label><input type="text" id="f_city" name="city" class="form-control"></div>
-<div class="col-md-4 mb-2"><label class="form-label">客户来源 <span class="text-danger">*</span></label><select name="channel" class="form-select" required><option value="">请选择</option>{% for c in channels %}<option value="{{ c }}">{{ c }}</option>{% endfor %}</select></div>
+<div class="col-md-4 mb-2"><label class="form-label">客户来源 <span class="text-danger">*</span></label><select id="f_channel" name="channel" class="form-select" required><option value="">请选择</option>{% for c in channels %}<option value="{{ c }}">{{ c }}</option>{% endfor %}</select></div>
 </div>
 <div class="mb-2"><label class="form-label">备注</label><textarea id="f_note" name="note" class="form-control" rows="2"></textarea></div>
 <input type="hidden" name="email" value="">
@@ -47,11 +48,13 @@
 <script>
 function parseText(){
     var t = document.getElementById("rawText").value;
-    if(!t.trim()){alert("请先粘贴客户信息");return;}
+    if(!t.trim()) return;
 
+    // phone
     var phoneMatch = t.match(/1[3-9]\d{9}/);
     if(phoneMatch) document.getElementById("f_phone").value = phoneMatch[0];
 
+    // company
     var orgPatterns = [
         /([\u4e00-\u9fa5]{2,}(?:大学|学院|研究所|研究院|公司|医院|中心|集团|实验室|药业|生物|科技|工业|制药|食品|农业|环保|检测|化工|材料)[\u4e00-\u9fa5]{0,6})/,
         /([\u4e00-\u9fa5]{2,}(?:有限公司|股份公司|责任公司))/
@@ -61,6 +64,7 @@ function parseText(){
         if(m){document.getElementById("f_company").value = m[1];break;}
     }
 
+    // product
     var products = ["冷冻研磨仪","组织研磨仪","土壤研磨仪","研磨仪","研磨机","粉碎机","粉碎仪","均质器","均质仪","混合仪","筛分仪","冷冻研磨","组织研磨","土壤研磨","球磨仪","球磨机","超声波","匀浆机","匀浆仪","细胞破碎","样品前处理","液氮研磨","多样品研磨","高通量研磨"];
     var foundProducts = [];
     for(var i=0;i<products.length;i++){
@@ -68,6 +72,7 @@ function parseText(){
     }
     if(foundProducts.length>0) document.getElementById("f_product").value = foundProducts.join("、");
 
+    // name
     var namePatterns = [
         /我(?:是|叫)[\u4e00-\u9fa5]*?(?:的)?([\u4e00-\u9fa5]{2,3})[\uff0c,\s]/,
         /([\u4e00-\u9fa5]{2,3})(?:老师|教授|博士|主任|院长|所长|工程师|工)/,
@@ -78,6 +83,7 @@ function parseText(){
         if(m){document.getElementById("f_name").value = m[1];break;}
     }
 
+    // city to province
     var cityMap = {
         "北京":"北京","上海":"上海","天津":"天津","重庆":"重庆",
         "南京":"江苏","苏州":"江苏","无锡":"江苏","常州":"江苏","徐州":"江苏","南通":"江苏","扬州":"江苏","镇江":"江苏","盐城":"江苏","淮安":"江苏","连云港":"江苏","泰州":"江苏","宿迁":"江苏",
@@ -103,48 +109,4 @@ function parseText(){
         "南宁":"广西","桂林":"广西","柳州":"广西",
         "海口":"海南","三亚":"海南",
         "呼和浩特":"内蒙古","包头":"内蒙古",
-        "乌鲁木齐":"新疆","克拉玛依":"新疆",
-        "拉萨":"西藏","西宁":"青海","银川":"宁夏"
-    };
-
-    var foundCity = "";
-    var foundProvince = "";
-    for(var city in cityMap){
-        if(t.indexOf(city)>=0){
-            foundCity = city;
-            foundProvince = cityMap[city];
-            break;
-        }
-    }
-    if(!foundProvince){
-        var provList = ["上海","北京","天津","重庆","江苏","浙江","广东","山东","河北","河南","湖北","湖南","四川","福建","安徽","辽宁","江西","陕西","山西","广西","云南","贵州","吉林","黑龙江","甘肃","海南","内蒙古","新疆","西藏","青海","宁夏"];
-        for(var i=0;i<provList.length;i++){
-            if(t.indexOf(provList[i])>=0){foundProvince = provList[i];break;}
-        }
-    }
-
-    if(foundCity) document.getElementById("f_city").value = foundCity;
-    if(foundProvince){
-        var sel = document.getElementById("f_province");
-        for(var i=0;i<sel.options.length;i++){
-            if(sel.options[i].value == foundProvince){sel.selectedIndex = i;break;}
-        }
-    }
-
-    document.getElementById("f_note").value = t;
-
-    var results = [];
-    if(document.getElementById("f_company").value) results.push("公司：" + document.getElementById("f_company").value);
-    if(document.getElementById("f_name").value) results.push("姓名：" + document.getElementById("f_name").value);
-    if(document.getElementById("f_phone").value) results.push("电话：" + document.getElementById("f_phone").value);
-    if(foundProvince) results.push("省份：" + foundProvince);
-    if(document.getElementById("f_product").value) results.push("产品：" + document.getElementById("f_product").value);
-
-    if(results.length > 0){
-        alert("解析成功！\n" + results.join("\n") + "\n\n请选择客户来源后点确认录入");
-    } else {
-        alert("未能自动识别，请手动填写");
-    }
-}
-</script>
-{% endblock %}
+        "乌鲁木齐":"新疆","
