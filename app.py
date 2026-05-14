@@ -98,7 +98,6 @@ def sales_manage():
 
 @app.route("/init_sales")
 def init_sales():
-    """One-time: load all sales from SALES_MAP"""
     count = 0
     added = set()
     for prov, depts in SALES_MAP.items():
@@ -113,10 +112,11 @@ def init_sales():
                     count += 1
                 added.add(key)
     db.session.commit()
-    return f"Done! Added {count} sales people. <a href='/sales'>View</a>"
+    return f"Done! Added {count} sales people. <a href='/sales'>View Sales</a> | <a href='/'>Home</a>"
 
 if __name__=="__main__":
     with app.app_context():
+        db.drop_all()
         db.create_all()
     port = int(os.environ.get("PORT", 9999))
     app.run(debug=False,host="0.0.0.0",port=port)
