@@ -4,14 +4,16 @@
 <div class="row">
 <div class="col-md-5"><div class="card"><div class="card-header"><b>添加销售</b></div><div class="card-body">
 <form method="POST">
-<div class="mb-3"><label class="form-label">姓名</label><input type="text" name="name" class="form-control" required></div>
-<div class="mb-3"><label class="form-label">手机</label><input type="text" name="phone" class="form-control"></div>
-<div class="mb-3"><label class="form-label">微信</label><input type="text" name="wechat" class="form-control"></div>
-<div class="mb-3"><label class="form-label">负责区域</label><select name="region" class="form-select" required>{% for r in regions %}<option value="{{ r }}">{{ r }}</option>{% endfor %}</select></div>
+<div class="mb-2"><label class="form-label">姓名</label><input type="text" name="name" class="form-control" required></div>
+<div class="mb-2"><label class="form-label">手机</label><input type="text" name="phone" class="form-control"></div>
+<div class="mb-2"><label class="form-label">微信</label><input type="text" name="wechat" class="form-control"></div>
+<div class="mb-2"><label class="form-label">部门</label><select name="department" class="form-select" required>{% for d in departments %}<option value="{{ d }}">{{ d }}</option>{% endfor %}</select></div>
+<div class="mb-2"><label class="form-label">区域</label><select name="region" class="form-select">{% for r in regions %}<option value="{{ r }}">{{ r }}</option>{% endfor %}</select></div>
 <button type="submit" class="btn btn-primary w-100">添加</button>
 </form></div></div></div>
-<div class="col-md-7"><div class="card"><div class="card-header"><b>销售列表</b></div><div class="card-body">
-<table class="table"><thead><tr><th>姓名</th><th>手机</th><th>微信</th><th>区域</th></tr></thead>
-<tbody>{% for s in sales_list %}<tr><td>{{ s.name }}</td><td>{{ s.phone }}</td><td>{{ s.wechat }}</td><td>{{ s.region }}</td></tr>{% endfor %}</tbody></table>
-</div></div></div></div>
+<div class="col-md-7"><div class="card"><div class="card-header"><b>销售列表</b> <a href="/init_sales" class="btn btn-sm btn-warning float-end">一键导入全部销售</a></div><div class="card-body">
+<table class="table table-sm"><thead><tr><th>姓名</th><th>手机</th><th>部门</th><th>区域</th></tr></thead>
+<tbody>{% for s in sales_list %}<tr><td>{{ s.name }}</td><td>{{ s.phone }}</td><td>{{ s.department }}</td><td>{{ s.region }}</td></tr>{% endfor %}</tbody></table>
+</div></div></div>
+</div>
 {% endblock %}
