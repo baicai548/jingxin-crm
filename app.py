@@ -71,7 +71,7 @@ def customer_list():
     if dp: q = q.filter(Customer.department==dp)
     return render_template("customers.html",customers=q.order_by(Customer.created_at.desc()).all(),channels=CHANNELS,provinces=PROVINCES,departments=DEPARTMENTS)
 
-@app.route("/customer/<int:id>/delete", methods=["POST"])
+@app.route("/customer/<int:id>/delete", methods=["GET","POST"])
 def delete_customer(id):
     c = Customer.query.get_or_404(id)
     db.session.delete(c)
@@ -102,22 +102,22 @@ def sales_manage():
         db.session.commit()
         flash(f"{s.name} \u6dfb\u52a0\u6210\u529f","success")
         return redirect(url_for("sales_manage"))
-    return render_template("sales.html",sales_list=SalesPerson.query.filter_by(is_active=True).order_by(SalesPerson.name,SalesPerson.department).all(),regions=list(REGION_MAPPING.keys()),departments=DEPARTMENTS)
+    return render_template("sales.html",sales_list=SalesPerson.query.filter_by(is_active=True).order_by(SalesPerson.department).all(),regions=list(REGION_MAPPING.keys()),departments=DEPARTMENTS)
 
 @app.route("/init_sales")
 def init_sales():
+    SalesPerson.query.delete()
+    db.session.commit()
     count = 0
     added = set()
     for prov, depts in SALES_MAP.items():
         for dept, name in depts.items():
             key = f"{name}_{dept}"
             if key not in added:
-                existing = SalesPerson.query.filter_by(name=name, department=dept).first()
-                if not existing:
-                    region = get_region(prov)
-                    s = SalesPerson(name=name, phone="", region=region, department=dept)
-                    db.session.add(s)
-                    count += 1
+                region = get_region(prov)
+                s = SalesPerson(name=name, phone="", region=region, department=dept)
+                db.session.add(s)
+                count += 1
                 added.add(key)
     db.session.commit()
     return f"Done! Added {count} sales people. <a href='/sales'>View Sales</a> | <a href='/'>Home</a>"
