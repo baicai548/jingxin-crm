@@ -71,6 +71,14 @@ def customer_list():
     if dp: q = q.filter(Customer.department==dp)
     return render_template("customers.html",customers=q.order_by(Customer.created_at.desc()).all(),channels=CHANNELS,provinces=PROVINCES,departments=DEPARTMENTS)
 
+@app.route("/customer/<int:id>/delete", methods=["POST"])
+def delete_customer(id):
+    c = Customer.query.get_or_404(id)
+    db.session.delete(c)
+    db.session.commit()
+    flash("\u5df2\u5220\u9664","success")
+    return redirect(url_for("customer_list"))
+
 @app.route("/export")
 def export_excel():
     from openpyxl import Workbook
