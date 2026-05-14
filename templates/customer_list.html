@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<h3 class="mb-4">📋 客户列表</h3>
+<form class="row g-3 mb-4" method="GET">
+    <div class="col-md-3">
+        <select name="channel" class="form-select">
+            <option value="">全部渠道</option>
+            {% for ch in channels %}
+            <option value="{{ ch }}">{{ ch }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select name="province" class="form-select">
+            <option value="">全部省份</option>
+            {% for p in provinces %}
+            <option value="{{ p }}">{{ p }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary">筛选</button>
+    </div>
+</form>
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr><th>公司</th><th>联系人</th><th>电话</th><th>省份</th><th>渠道</th><th>分配销售</th><th>状态</th><th>时间</th></tr>
+        </thead>
+        <tbody>
+        {% for c in customers %}
+        <tr>
+            <td>{{ c.company_name }}</td>
+            <td>{{ c.contact_name }}</td>
+            <td>{{ c.phone }}</td>
+            <td>{{ c.province }}</td>
+            <td>{{ c.channel }}</td>
+            <td>{{ c.sales_person.name if c.sales_person else '未分配' }}</td>
+            <td><span class="badge bg-info">{{ c.status }}</span></td>
+            <td>{{ c.created_at.strftime('%m-%d %H:%M') }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

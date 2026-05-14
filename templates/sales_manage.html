@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<h3 class="mb-4">👥 销售人员管理</h3>
+<div class="row">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header"><strong>添加销售</strong></div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">姓名</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">手机</label>
+                        <input type="text" name="phone" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">微信号</label>
+                        <input type="text" name="wechat" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">负责区域</label>
+                        <select name="region" class="form-select" required>
+                            {% for r in regions %}
+                            <option value="{{ r }}">{{ r }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">添加</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header"><strong>当前销售列表</strong></div>
+            <div class="card-body">
+                <table class="table">
+                    <thead><tr><th>姓名</th><th>手机</th><th>微信</th><th>负责区域</th></tr></thead>
+                    <tbody>
+                    {% for s in sales_list %}
+                    <tr><td>{{ s.name }}</td><td>{{ s.phone }}</td><td>{{ s.wechat }}</td><td>{{ s.region }}</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
