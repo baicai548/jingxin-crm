@@ -8,16 +8,21 @@
 <div class="col-md-3"><div class="sc g4"><p class="mb-1">渠道数</p><h3>{{ channel_stats|length }}</h3></div></div>
 </div>
 <div class="row mt-4">
-<div class="col-md-6"><div class="card"><div class="card-header"><b>渠道来源统计</b></div><div class="card-body">
-<table class="table table-striped"><thead><tr><th>渠道</th><th>数量</th><th>占比</th></tr></thead>
+<div class="col-md-4"><div class="card"><div class="card-header"><b>客户来源统计</b></div><div class="card-body">
+<table class="table table-striped table-sm"><thead><tr><th>来源</th><th>数量</th><th>占比</th></tr></thead>
 <tbody>{% for c,n in channel_stats %}<tr><td>{{ c }}</td><td>{{ n }}</td><td>{{ "%.1f"|format(n/total_customers*100 if total_customers else 0) }}%</td></tr>{% endfor %}</tbody></table>
 </div></div></div>
-<div class="col-md-6"><div class="card"><div class="card-header"><b>区域分布</b></div><div class="card-body">
-<table class="table table-striped"><thead><tr><th>区域</th><th>数量</th><th>占比</th></tr></thead>
+<div class="col-md-4"><div class="card"><div class="card-header"><b>产品归属统计</b></div><div class="card-body">
+<table class="table table-striped table-sm"><thead><tr><th>归属</th><th>数量</th><th>占比</th></tr></thead>
+<tbody>{% for d,n in dept_stats %}<tr><td>{{ d }}</td><td>{{ n }}</td><td>{{ "%.1f"|format(n/total_customers*100 if total_customers else 0) }}%</td></tr>{% endfor %}</tbody></table>
+</div></div></div>
+<div class="col-md-4"><div class="card"><div class="card-header"><b>区域分布</b></div><div class="card-body">
+<table class="table table-striped table-sm"><thead><tr><th>区域</th><th>数量</th><th>占比</th></tr></thead>
 <tbody>{% for r,n in region_stats.items() %}<tr><td>{{ r }}</td><td>{{ n }}</td><td>{{ "%.1f"|format(n/total_customers*100 if total_customers else 0) }}%</td></tr>{% endfor %}</tbody></table>
-</div></div></div></div>
+</div></div></div>
+</div>
 <div class="row mt-4"><div class="col-md-12"><div class="card"><div class="card-header"><b>销售分配</b></div><div class="card-body">
-<table class="table table-striped"><thead><tr><th>销售</th><th>区域</th><th>客户数</th></tr></thead>
-<tbody>{% for nm,rg,ct in sales_stats %}<tr><td>{{ nm }}</td><td>{{ rg }}</td><td>{{ ct }}</td></tr>{% endfor %}</tbody></table>
+<table class="table table-striped table-sm"><thead><tr><th>销售</th><th>部门</th><th>客户数</th></tr></thead>
+<tbody>{% for nm,dp,ct in sales_stats %}<tr><td>{{ nm }}</td><td>{{ dp }}</td><td>{{ ct }}</td></tr>{% endfor %}</tbody></table>
 </div></div></div></div>
 {% endblock %}
