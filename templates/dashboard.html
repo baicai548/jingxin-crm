@@ -1,58 +1,113 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-<h4 class="mb-0" style="color:#1e293b;font-weight:700">数据看板</h4>
-<small class="text-muted">实时数据概览</small>
+<div class="page-title">数据看板</div>
 </div>
 
-<div class="row">
-<div class="col-md-3"><div class="sc s1"><p>总客户数</p><h3>{{ total_customers }}</h3></div></div>
-<div class="col-md-3"><div class="sc s2"><p>今日新增</p><h3>{{ today_count }}</h3></div></div>
-<div class="col-md-3"><div class="sc s3"><p>本周新增</p><h3>{{ week_count }}</h3></div></div>
-<div class="col-md-3"><div class="sc s4"><p>来源渠道</p><h3>{{ channel_stats|length }}</h3></div></div>
+<div class="stat-row">
+<div class="stat-box blue"><div class="label">总客户数</div><div class="value">{{ total_customers }}</div></div>
+<div class="stat-box red"><div class="label">今日新增</div><div class="value">{{ today_count }}</div></div>
+<div class="stat-box green"><div class="label">本周新增</div><div class="value">{{ week_count }}</div></div>
+<div class="stat-box purple"><div class="label">来源渠道</div><div class="value">{{ channel_stats|length }}</div></div>
 </div>
 
-<div class="row mt-4">
+<div class="row g-3">
 <div class="col-md-4">
 <div class="card">
 <div class="card-header">客户来源</div>
 <div class="card-body p-0">
-<table class="table table-sm mb-0">
-<thead class="table-light"><tr><th>来源</th><th>数量</th><th>占比</th></tr></thead>
-<tbody>{% for c,n in channel_stats %}<tr><td>{{ c }}</td><td><strong>{{ n }}</strong></td><td><span class="text-muted">{{ "%.1f"|format(n/total_customers*100 if total_customers else 0) }}%</span></td></tr>{% endfor %}</tbody>
+<table class="table table-borderless">
+<thead><tr><th>来源</th><th>数量</th><th>占比</th></tr></thead>
+<tbody>
+{% for c,n in channel_stats %}
+<tr>
+<td>{{ c }}</td>
+<td><strong>{{ n }}</strong></td>
+<td>
+<div class="d-flex align-items-center gap-2">
+<div class="progress flex-grow-1"><div class="progress-bar" style="width:{{ (n/total_customers*100 if total_customers else 0) }}%"></div></div>
+<span style="font-size:12px;color:#8f959e;min-width:36px">{{ "%.0f"|format(n/total_customers*100 if total_customers else 0) }}%</span>
+</div>
+</td>
+</tr>
+{% endfor %}
+</tbody>
 </table>
 </div></div>
 </div>
+
 <div class="col-md-4">
 <div class="card">
 <div class="card-header">产品归属</div>
 <div class="card-body p-0">
-<table class="table table-sm mb-0">
-<thead class="table-light"><tr><th>部门</th><th>数量</th><th>占比</th></tr></thead>
-<tbody>{% for d,n in dept_stats %}<tr><td>{{ d }}</td><td><strong>{{ n }}</strong></td><td><span class="text-muted">{{ "%.1f"|format(n/total_customers*100 if total_customers else 0) }}%</span></td></tr>{% endfor %}</tbody>
+<table class="table table-borderless">
+<thead><tr><th>部门</th><th>数量</th><th>占比</th></tr></thead>
+<tbody>
+{% for d,n in dept_stats %}
+<tr>
+<td><span class="badge" style="background:{% if d=='线下一部' %}#e8f3ff;color:#3370ff{% elif d=='线下二部' %}#fff0e8;color:#ff7d00{% elif d=='线上' %}#e8fff0;color:#34c724{% else %}#f0e8ff;color:#7b67ee{% endif %}">{{ d }}</span></td>
+<td><strong>{{ n }}</strong></td>
+<td>
+<div class="d-flex align-items-center gap-2">
+<div class="progress flex-grow-1"><div class="progress-bar" style="width:{{ (n/total_customers*100 if total_customers else 0) }}%;background:{% if d=='线下一部' %}#3370ff{% elif d=='线下二部' %}#ff7d00{% elif d=='线上' %}#34c724{% else %}#7b67ee{% endif %}"></div></div>
+<span style="font-size:12px;color:#8f959e;min-width:36px">{{ "%.0f"|format(n/total_customers*100 if total_customers else 0) }}%</span>
+</div>
+</td>
+</tr>
+{% endfor %}
+</tbody>
 </table>
 </div></div>
 </div>
+
 <div class="col-md-4">
 <div class="card">
 <div class="card-header">区域分布</div>
 <div class="card-body p-0">
-<table class="table table-sm mb-0">
-<thead class="table-light"><tr><th>区域</th><th>数量</th><th>占比</th></tr></thead>
-<tbody>{% for r,n in region_stats.items() %}<tr><td>{{ r }}</td><td><strong>{{ n }}</strong></td><td><span class="text-muted">{{ "%.1f"|format(n/total_customers*100 if total_customers else 0) }}%</span></td></tr>{% endfor %}</tbody>
+<table class="table table-borderless">
+<thead><tr><th>区域</th><th>数量</th><th>占比</th></tr></thead>
+<tbody>
+{% for r,n in region_stats.items() %}
+<tr>
+<td>{{ r }}</td>
+<td><strong>{{ n }}</strong></td>
+<td>
+<div class="d-flex align-items-center gap-2">
+<div class="progress flex-grow-1"><div class="progress-bar" style="width:{{ (n/total_customers*100 if total_customers else 0) }}%"></div></div>
+<span style="font-size:12px;color:#8f959e;min-width:36px">{{ "%.0f"|format(n/total_customers*100 if total_customers else 0) }}%</span>
+</div>
+</td>
+</tr>
+{% endfor %}
+</tbody>
 </table>
 </div></div>
 </div>
 </div>
 
-<div class="row mt-4">
+<div class="row g-3 mt-3">
 <div class="col-md-12">
 <div class="card">
-<div class="card-header">销售分配排行</div>
+<div class="card-header">销售排行</div>
 <div class="card-body p-0">
-<table class="table table-sm mb-0">
-<thead class="table-light"><tr><th>销售</th><th>部门</th><th>客户数</th><th>占比</th></tr></thead>
-<tbody>{% for nm,dp,ct in sales_stats %}<tr><td><strong>{{ nm }}</strong></td><td>{{ dp }}</td><td>{{ ct }}</td><td><div class="progress" style="height:6px;width:100px"><div class="progress-bar bg-primary" style="width:{{ (ct/total_customers*100 if total_customers else 0) }}%"></div></div></td></tr>{% endfor %}</tbody>
+<table class="table table-borderless">
+<thead><tr><th style="width:40px">#</th><th>销售</th><th>部门</th><th>客户数</th><th style="width:40%">占比</th></tr></thead>
+<tbody>
+{% for nm,dp,ct in sales_stats %}
+<tr>
+<td style="color:#8f959e">{{ loop.index }}</td>
+<td><strong>{{ nm }}</strong></td>
+<td><span class="badge" style="background:{% if dp=='线下一部' %}#e8f3ff;color:#3370ff{% elif dp=='线下二部' %}#fff0e8;color:#ff7d00{% elif dp=='线上' %}#e8fff0;color:#34c724{% else %}#f0e8ff;color:#7b67ee{% endif %}">{{ dp }}</span></td>
+<td><strong>{{ ct }}</strong></td>
+<td>
+<div class="d-flex align-items-center gap-2">
+<div class="progress flex-grow-1"><div class="progress-bar" style="width:{{ (ct/total_customers*100 if total_customers else 0) }}%"></div></div>
+<span style="font-size:12px;color:#8f959e;min-width:36px">{{ "%.0f"|format(ct/total_customers*100 if total_customers else 0) }}%</span>
+</div>
+</td>
+</tr>
+{% endfor %}
+</tbody>
 </table>
 </div></div>
 </div>
