@@ -102,7 +102,7 @@ def sales_manage():
         db.session.commit()
         flash(f"{s.name} \u6dfb\u52a0\u6210\u529f","success")
         return redirect(url_for("sales_manage"))
-    return render_template("sales.html",sales_list=SalesPerson.query.filter_by(is_active=True).order_by(SalesPerson.department).all(),regions=list(REGION_MAPPING.keys()),departments=DEPARTMENTS)
+    return render_template("sales.html",sales_list=SalesPerson.query.filter_by(is_active=True).order_by(SalesPerson.name,SalesPerson.department).all(),regions=list(REGION_MAPPING.keys()),departments=DEPARTMENTS)
 
 @app.route("/init_sales")
 def init_sales():
