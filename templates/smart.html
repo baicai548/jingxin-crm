@@ -15,6 +15,10 @@
 <div class="card">
 <div class="card-header bg-success text-white"><b>客户信息</b></div>
 <div class="card-body">
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% for cat, msg in messages %}
+<div class="alert alert-{{ 'success' if cat == 'success' else 'warning' if cat == 'warning' else 'danger' }} alert-dismissible fade show">{{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+{% endfor %}{% endwith %}
 <form method="POST">
 <div class="row">
 <div class="col-md-6 mb-2"><label class="form-label">公司/单位</label><input type="text" id="f_company" name="company_name" class="form-control"></div>
@@ -28,7 +32,7 @@
 <div class="col-md-3 mb-2"><label class="form-label">省份 <span class="text-danger">*</span></label><select id="f_province" name="province" class="form-select" required><option value="">请选择</option>{% for p in provinces %}<option value="{{ p }}">{{ p }}</option>{% endfor %}</select></div>
 <div class="col-md-3 mb-2"><label class="form-label">城市</label><input type="text" id="f_city" name="city" class="form-control"></div>
 <div class="col-md-3 mb-2"><label class="form-label">客户来源 <span class="text-danger">*</span></label><select id="f_channel" name="channel" class="form-select" required><option value="">请选择</option>{% for c in channels %}<option value="{{ c }}">{{ c }}</option>{% endfor %}</select></div>
-<div class="col-md-3 mb-2"><label class="form-label">产品归属 <span class="text-danger">*</span></label><select id="f_dept" name="department" class="form-select" required><option value="">请选择</option>{% for d in departments %}<option value="{{ d }}">{{ d }}</option>{% endfor %}</select></div>
+<div class="col-md-3 mb-2"><label class="form-label">产品归属 <span class="text-danger">*</span></label><select id="f_dept" name="department" class="form-select" required>{% for d in departments %}<option value="{{ d }}">{{ d }}</option>{% endfor %}</select></div>
 </div>
 <div class="mb-2"><label class="form-label">备注</label><textarea id="f_note" name="note" class="form-control" rows="2"></textarea></div>
 <input type="hidden" name="email" value="">
@@ -45,6 +49,7 @@ function parseText(){
     var t = document.getElementById("rawText").value;
     if(!t.trim()) return;
 
+    // reset all fields
     document.getElementById("f_company").value = "";
     document.getElementById("f_name").value = "";
     document.getElementById("f_phone").value = "";
@@ -54,13 +59,14 @@ function parseText(){
     document.getElementById("f_channel").selectedIndex = 0;
     document.getElementById("f_dept").selectedIndex = 0;
 
+    // all common surnames for name detection
     var surnames = "赵钱孙李周吴郑王冯陈褚卫蒋沈韩杨朱秦尤许何吕施张孔曹严华金魏陶姜戚谢邹喻柏水窦章云苏潘葛奚范彭郎鲁韦昌马苗凤花方俞任袁柳鲍史唐费廉岑薛雷贺倪汤滕殷罗毕郝邬安常乐于时傅皮卞齐康伍余元卜顾孟平黄和穆萧尹姚邵湛汪祁毛禹狄米贝明臧计伏成戴谈宋茅庞熊纪舒屈项祝董梁杜阮蓝闵席季麻强贾路娄危江童颜郭梅盛林刁钟徐邱骆高夏蔡田樊胡凌霍虞万支柯管卢莫经房裘缪干解应宗丁宣邓郁单杭洪包诸左石崔吉龚程邢裴陆荣翁荀羊惠甄曲家封储靳汲邴松井段富巫乌焦巴弓牧山谷车侯蓬全班仰秋仲伊宫宁仇栾暴甘戎祖武符刘景詹束龙叶幸司韶郜黎蓟薄印宿白怀蒲邰从鄂索咸赖卓蔺屠蒙池乔阴胥能苍双闻莘党翟谭贡劳逄姬申扶堵冉宰郦雍璩桑寿通边燕冀郏浦尚农温别庄晏柴瞿阎充慕连茹习宦艾鱼容向古易慎戈廖庾终暨居衡步都耿满弘匡国文寇广禄阙东欧殳沃利蔚越夔隆师巩厍聂晁勾敖融冷訾辛阚那简饶空曾母沙乜养鞠须丰巢关蒯相查后荆红游竺权逯盖益桓公仉督岳帅缑亢况后有琴";
 
-    // phone
+    // ===== 1. PHONE =====
     var phoneMatch = t.match(/1[3-9]\d{9}/);
     if(phoneMatch) document.getElementById("f_phone").value = phoneMatch[0];
 
-    // company
+    // ===== 2. COMPANY =====
     var foundCompany = "";
     var orgPatterns = [
         /([\u4e00-\u9fa5]{2,}(?:大学|学院|研究所|研究院|公司|医院|中心|集团|实验室|药业|生物|科技|工业|制药|食品|农业|环保|检测|化工|材料|电子|机械|能源|矿业|地质|水利|林业|畜牧|水产)[\u4e00-\u9fa5]{0,8})/,
@@ -71,26 +77,48 @@ function parseText(){
         if(m){foundCompany = m[1]; document.getElementById("f_company").value = m[1];break;}
     }
 
-    // product + auto detect department
-    var dept1Products = ["研磨仪","研磨机","粉碎机","粉碎仪","均质器","均质仪","混合仪","筛分仪","冷冻研磨","组织研磨","土壤研磨","球磨仪","球磨机","匀浆机","匀浆仪","细胞破碎","样品前处理","液氮研磨","多样品研磨","高通量研磨","振动筛","三维振动","行星球磨","刀式研磨","臼式研磨"];
-    var dept2Products = ["高压均质机","真空离心浓缩仪","单细胞悬液制备仪","超声波DNA打断仪","真空搅拌脱泡机","高压均质","离心浓缩","单细胞","DNA打断","真空搅拌","脱泡机"];
-    var ibidiProducts = ["ibidi","培养皿","细胞培养","载玻片","通道载玻片","灌流","活细胞成像"];
+    // ===== 3. PRODUCT + AUTO DEPARTMENT =====
+    // 线下一部产品（常规研磨系列）
+    var dept1Products = ["冷冻研磨仪","组织研磨仪","土壤研磨仪","研磨仪","研磨机","粉碎机","粉碎仪","均质器","均质仪","混合仪","筛分仪","冷冻研磨","组织研磨","土壤研磨","球磨仪","球磨机","匀浆机","匀浆仪","细胞破碎","样品前处理","液氮研磨","多样品研磨","高通量研磨","振动筛","三维振动","行星球磨","刀式研磨","臼式研磨"];
+    // 线下二部产品
+    var dept2Products = ["高压均质机","真空离心浓缩仪","单细胞悬液制备仪","超声波DNA打断仪","真空搅拌脱泡机","高压均质","离心浓缩","单细胞悬液","DNA打断","真空搅拌","脱泡机"];
+    // ibidi产品
+    var ibidiProducts = ["ibidi","培养皿","细胞培养","载玻片","通道载玻片","灌流","活细胞成像","趋化","伤口愈合"];
 
     var foundProducts = [];
     var detectedDept = "";
 
+    // check ibidi first (highest priority)
     for(var i=0;i<ibidiProducts.length;i++){
-        if(t.toLowerCase().indexOf(ibidiProducts[i].toLowerCase())>=0){foundProducts.push(ibidiProducts[i]);detectedDept="ibidi";}
+        if(t.toLowerCase().indexOf(ibidiProducts[i].toLowerCase())>=0){
+            foundProducts.push(ibidiProducts[i]);
+            detectedDept = "ibidi";
+        }
     }
+    // then dept2
     for(var i=0;i<dept2Products.length;i++){
-        if(t.indexOf(dept2Products[i])>=0){foundProducts.push(dept2Products[i]);if(!detectedDept)detectedDept="\u7ebf\u4e0b\u4e8c\u90e8";}
+        if(t.indexOf(dept2Products[i])>=0){
+            foundProducts.push(dept2Products[i]);
+            if(!detectedDept) detectedDept = "\u7ebf\u4e0b\u4e8c\u90e8";
+        }
     }
+    // then dept1
     for(var i=0;i<dept1Products.length;i++){
-        if(t.indexOf(dept1Products[i])>=0){foundProducts.push(dept1Products[i]);if(!detectedDept)detectedDept="\u7ebf\u4e0b\u4e00\u90e8";}
+        if(t.indexOf(dept1Products[i])>=0){
+            foundProducts.push(dept1Products[i]);
+            if(!detectedDept) detectedDept = "\u7ebf\u4e0b\u4e00\u90e8";
+        }
     }
-    if(foundProducts.length>0) document.getElementById("f_product").value = foundProducts.join("、");
+    if(foundProducts.length>0){
+        // deduplicate
+        var unique = [];
+        for(var i=0;i<foundProducts.length;i++){
+            if(unique.indexOf(foundProducts[i])<0) unique.push(foundProducts[i]);
+        }
+        document.getElementById("f_product").value = unique.join("\u3001");
+    }
 
-    // set department
+    // set department dropdown
     if(detectedDept){
         var selDept = document.getElementById("f_dept");
         for(var i=0;i<selDept.options.length;i++){
@@ -98,122 +126,36 @@ function parseText(){
         }
     }
 
-    // contact name
+    // ===== 4. CONTACT NAME (enhanced) =====
     var foundName = "";
+
+    // pattern 1: 我是xxx / 我叫xxx
     var m1 = t.match(/我(?:是|叫)([\u4e00-\u9fa5]{2,3})/);
     if(m1) foundName = m1[1];
+
+    // pattern 2: xxx老师/教授/博士/主任/工程师
     if(!foundName){
         var m2 = t.match(/([\u4e00-\u9fa5]{2,3})(?:老师|教授|博士|主任|院长|所长|工程师|经理|总)/);
         if(m2) foundName = m2[1];
     }
+
+    // pattern 3: 联系人：xxx / 姓名：xxx
     if(!foundName){
         var m3 = t.match(/(?:联系人|姓名|客户|名字)[：:\s]*([\u4e00-\u9fa5]{2,3})/);
         if(m3) foundName = m3[1];
     }
+
+    // pattern 4: smart extraction - remove known parts and find surname
     if(!foundName){
         var cleanText = t;
+        // remove known entities
         if(foundCompany) cleanText = cleanText.replace(foundCompany, "");
         if(phoneMatch) cleanText = cleanText.replace(phoneMatch[0], "");
         for(var i=0;i<dept1Products.length;i++) cleanText = cleanText.replace(dept1Products[i], "");
         for(var i=0;i<dept2Products.length;i++) cleanText = cleanText.replace(dept2Products[i], "");
-        var places = ["上海","北京","天津","重庆","南京","苏州","杭州","广州","深圳","武汉","成都","西安","长沙","郑州","济南","青岛","大连","沈阳","哈尔滨","长春","福州","厦门","南昌","合肥","昆明","贵阳","兰州","太原","石家庄","南宁","海口","呼和浩特","乌鲁木齐","拉萨","西宁","银川","内蒙古","黑龙江","丁香通","仪器信息网","拓赫化工","净信商桥","拓赫商桥","雷萌商桥","测博商桥","拓赫电询","微信","电询","来电"];
-        for(var i=0;i<places.length;i++) cleanText = cleanText.replace(new RegExp(places[i],"g"), "");
-        cleanText = cleanText.replace(/[0-9a-zA-Z\s,，。.、：:；;！!？?（）()\-\—\/]/g, "");
-        for(var i=0;i<cleanText.length;i++){
-            var ch = cleanText[i];
-            if(surnames.indexOf(ch) >= 0){
-                var candidate = "";
-                for(var j=i;j<Math.min(i+3,cleanText.length);j++){
-                    if(/[\u4e00-\u9fa5]/.test(cleanText[j])) candidate += cleanText[j];
-                    else break;
-                }
-                if(candidate.length >= 2 && candidate.length <= 3){
-                    foundName = candidate;
-                    break;
-                }
-            }
-        }
-    }
-    if(foundName) document.getElementById("f_name").value = foundName;
-
-    // city to province
-    var cityMap = {
-        "北京":"北京","上海":"上海","天津":"天津","重庆":"重庆",
-        "南京":"江苏","苏州":"江苏","无锡":"江苏","常州":"江苏","徐州":"江苏","南通":"江苏","扬州":"江苏","镇江":"江苏","盐城":"江苏","淮安":"江苏","连云港":"江苏","泰州":"江苏","宿迁":"江苏",
-        "杭州":"浙江","宁波":"浙江","温州":"浙江","嘉兴":"浙江","湖州":"浙江","绍兴":"浙江","金华":"浙江","台州":"浙江",
-        "广州":"广东","深圳":"广东","东莞":"广东","佛山":"广东","珠海":"广东","惠州":"广东","中山":"广东","汕头":"广东",
-        "济南":"山东","青岛":"山东","烟台":"山东","潍坊":"山东","威海":"山东","临沂":"山东","淄博":"山东",
-        "成都":"四川","绵阳":"四川","德阳":"四川","乐山":"四川",
-        "武汉":"湖北","宜昌":"湖北","襄阳":"湖北",
-        "长沙":"湖南","株洲":"湖南","湘潭":"湖南",
-        "郑州":"河南","洛阳":"河南","开封":"河南","新乡":"河南",
-        "西安":"陕西","咸阳":"陕西","宝鸡":"陕西",
-        "沈阳":"辽宁","大连":"辽宁","鞍山":"辽宁",
-        "哈尔滨":"黑龙江","大庆":"黑龙江","齐齐哈尔":"黑龙江",
-        "长春":"吉林",
-        "福州":"福建","厦门":"福建","泉州":"福建",
-        "南昌":"江西","九江":"江西","赣州":"江西",
-        "合肥":"安徽","芜湖":"安徽","蚌埠":"安徽","马鞍山":"安徽",
-        "昆明":"云南","大理":"云南",
-        "贵阳":"贵州","遵义":"贵州",
-        "兰州":"甘肃","天水":"甘肃",
-        "太原":"山西","大同":"山西",
-        "石家庄":"河北","唐山":"河北","保定":"河北","邯郸":"河北",
-        "南宁":"广西","桂林":"广西","柳州":"广西",
-        "海口":"海南","三亚":"海南",
-        "呼和浩特":"内蒙古","包头":"内蒙古",
-        "乌鲁木齐":"新疆","克拉玛依":"新疆",
-        "拉萨":"西藏","西宁":"青海","银川":"宁夏"
-    };
-
-    var foundCity = "";
-    var foundProvince = "";
-    for(var city in cityMap){
-        if(t.indexOf(city)>=0){foundCity = city;foundProvince = cityMap[city];break;}
-    }
-    if(!foundProvince){
-        var provList = ["上海","北京","天津","重庆","江苏","浙江","广东","山东","河北","河南","湖北","湖南","四川","福建","安徽","辽宁","江西","陕西","山西","广西","云南","贵州","吉林","黑龙江","甘肃","海南","内蒙古","新疆","西藏","青海","宁夏","港澳台"];
-        for(var i=0;i<provList.length;i++){
-            if(t.indexOf(provList[i])>=0){foundProvince = provList[i];break;}
-        }
-    }
-    if(foundCity) document.getElementById("f_city").value = foundCity;
-    if(foundProvince){
-        var sel = document.getElementById("f_province");
-        for(var i=0;i<sel.options.length;i++){
-            if(sel.options[i].value == foundProvince){sel.selectedIndex = i;break;}
-        }
-    }
-
-    // channel/source
-    var channelMap = {
-        "丁香通":["丁香通","丁香"],
-        "仪器信息网":["仪器信息网","仪器网","仪信通"],
-        "拓赫化工":["拓赫化工"],
-        "微信好友":["微信","wx","WX"],
-        "QQ好友":["QQ","qq","Qq"],
-        "电询":["来电","电话咨询","电话询问","打电话","电询"],
-        "净信商桥":["净信商桥"],
-        "拓赫商桥":["拓赫商桥"],
-        "雷萌商桥":["雷萌商桥","雷萌"],
-        "测博商桥":["测博商桥","测博"],
-        "拓赫电询":["拓赫电询"]
-    };
-    var selChannel = document.getElementById("f_channel");
-    for(var ch in channelMap){
-        var keywords = channelMap[ch];
-        for(var i=0;i<keywords.length;i++){
-            if(t.indexOf(keywords[i])>=0){
-                for(var j=0;j<selChannel.options.length;j++){
-                    if(selChannel.options[j].value == ch){selChannel.selectedIndex = j;break;}
-                }
-                break;
-            }
-        }
-        if(selChannel.selectedIndex > 0) break;
-    }
-
-    document.getElementById("f_note").value = t;
-}
-</script>
-{% endblock %}
+        for(var i=0;i<ibidiProducts.length;i++) cleanText = cleanText.replace(new RegExp(ibidiProducts[i],"gi"), "");
+        // remove places and channel keywords
+        var removeWords = ["上海","北京","天津","重庆","南京","苏州","杭州","广州","深圳","武汉","成都","西安","长沙","郑州","济南","青岛","大连","沈阳","哈尔滨","长春","福州","厦门","南昌","合肥","昆明","贵阳","兰州","太原","石家庄","南宁","海口","呼和浩特","乌鲁木齐","拉萨","西宁","银川","内蒙古","黑龙江","丁香通","仪器信息网","拓赫化工","净信商桥","拓赫商桥","雷萌商桥","测博商桥","拓赫电询","微信","电询","来电","咨询","了解","需要","想要","购买","采购","询价","报价"];
+        for(var i=0;i<removeWords.length;i++) cleanText = cleanText.replace(new RegExp(removeWords[i],"g"), "");
+        // remove non-Chinese characters
+        cleanText = cleanText.replace(/[0-9a-zA-Z\s,，。.、：
