@@ -25,7 +25,7 @@
 <td>{{ c.sales_person.name if c.sales_person else "未分配" }}</td>
 <td>{{ c.created_at.strftime("%m-%d %H:%M") }}</td>
 <td>
-<form method="POST" action="/customer/{{ c.id }}/delete" onsubmit="return confirm('确定要删除这条客户记录吗？\n\n{{ c.contact_name }} - {{ c.phone }}\n\n删除后不可恢复！')">
+<form method="POST" action="/customer/{{ c.id }}/delete" onsubmit="return confirm('确定要删除吗？')">
 <button type="submit" class="btn btn-sm" style="color:#f54a45;background:none;border:none;padding:2px 6px;font-size:13px">删除</button>
 </form>
 </td>
