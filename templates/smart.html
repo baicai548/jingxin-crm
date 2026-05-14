@@ -109,4 +109,62 @@ function parseText(){
         "南宁":"广西","桂林":"广西","柳州":"广西",
         "海口":"海南","三亚":"海南",
         "呼和浩特":"内蒙古","包头":"内蒙古",
-        "乌鲁木齐":"新疆","
+        "乌鲁木齐":"新疆","克拉玛依":"新疆",
+        "拉萨":"西藏","西宁":"青海","银川":"宁夏"
+    };
+
+    var foundCity = "";
+    var foundProvince = "";
+    for(var city in cityMap){
+        if(t.indexOf(city)>=0){
+            foundCity = city;
+            foundProvince = cityMap[city];
+            break;
+        }
+    }
+    if(!foundProvince){
+        var provList = ["上海","北京","天津","重庆","江苏","浙江","广东","山东","河北","河南","湖北","湖南","四川","福建","安徽","辽宁","江西","陕西","山西","广西","云南","贵州","吉林","黑龙江","甘肃","海南","内蒙古","新疆","西藏","青海","宁夏"];
+        for(var i=0;i<provList.length;i++){
+            if(t.indexOf(provList[i])>=0){foundProvince = provList[i];break;}
+        }
+    }
+    if(foundCity) document.getElementById("f_city").value = foundCity;
+    if(foundProvince){
+        var sel = document.getElementById("f_province");
+        for(var i=0;i<sel.options.length;i++){
+            if(sel.options[i].value == foundProvince){sel.selectedIndex = i;break;}
+        }
+    }
+
+    // auto detect channel/source
+    var channelMap = {
+        "丁香通":["丁香通","丁香"],
+        "仪器信息网":["仪器信息网","仪器网","仪信通"],
+        "拓赫化工":["拓赫化工"],
+        "微信好友":["微信","wx"],
+        "QQ好友":["QQ","qq"],
+        "电询":["来电","电话咨询","电话询问","打电话"],
+        "净信商桥":["净信商桥"],
+        "拓赫商桥":["拓赫商桥"],
+        "雷萌商桥":["雷萌商桥","雷萌"],
+        "测博商桥":["测博商桥","测博"],
+        "拓赫电询":["拓赫电询"]
+    };
+    var selChannel = document.getElementById("f_channel");
+    for(var ch in channelMap){
+        var keywords = channelMap[ch];
+        for(var i=0;i<keywords.length;i++){
+            if(t.indexOf(keywords[i])>=0){
+                for(var j=0;j<selChannel.options.length;j++){
+                    if(selChannel.options[j].value == ch){selChannel.selectedIndex = j;break;}
+                }
+                break;
+            }
+        }
+        if(selChannel.selectedIndex > 0) break;
+    }
+
+    document.getElementById("f_note").value = t;
+}
+</script>
+{% endblock %}
