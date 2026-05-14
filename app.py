@@ -4,7 +4,6 @@ from models import db,SalesPerson,Customer,REGION_MAPPING,CHANNELS,PROVINCES
 from config import Config
 from datetime import datetime,timedelta
 from sqlalchemy import func
-import pandas as pd
 from io import BytesIO
 
 app = Flask(__name__)
@@ -104,14 +103,18 @@ def customer_list():
 
 @app.route("/export")
 def export_excel():
-    data = []
-    for c in Customer.query.order_by(Customer.created_at.desc()).all():
-        sn = c.sales_person.name if c.sales_person else "\u672a\u5206\u914d"
-        data.append({"\u516c\u53f8":c.company_name,"\u8054\u7cfb\u4eba":c.contact_name,"\u7535\u8bdd":c.phone,"\u7701\u4efd":c.province,"\u6e20\u9053":c.channel,"\u9500\u552e":sn,"\u65f6\u95f4":c.created_at.strftime("%Y-%m-%d %H:%M")})
+    from openpyxl import Workbook
+    custs = Customer.query.order_by(Customer.created_at.desc()).all()
+    wb = Workbook()
+    ws = wb.active
+    ws.append(["公司","联系人","电话","省份","渠道","销售","状态","时间"])
+    for c in custs:
+        sn = c.sales_person.name if c.sales_person else "未分配"
+        ws.append([c.company_name, c.contact_name, c.phone, c.province, c.channel, sn, c.status, c.created_at.strftime("%Y-%m-%d %H:%M")])
     buf = BytesIO()
-    pd.DataFrame(data).to_excel(buf,index=False,engine="openpyxl")
+    wb.save(buf)
     buf.seek(0)
-    return send_file(buf,mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",as_attachment=True,download_name="customers.xlsx")
+    return send_file(buf, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", as_attachment=True, download_name="customers.xlsx")
 
 @app.route("/sales",methods=["GET","POST"])
 def sales_manage():
