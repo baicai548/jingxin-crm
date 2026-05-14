@@ -100,6 +100,21 @@ def customer_list():
     if ch: q = q.filter(Customer.channel==ch)
     if pv: q = q.filter(Customer.province==pv)
     return render_template("customers.html",customers=q.order_by(Customer.created_at.desc()).all(),channels=CHANNELS,provinces=PROVINCES)
+@app.route("/smart", methods=["GET","POST"])
+def smart_input():
+    if request.method=="POST":
+        fields = ["company_name","contact_name","phone","email","province","city","channel","product_interest","note"]
+        d = {k:request.form.get(k,"").strip() for k in fields}
+        s = assign(d["province"])
+        c = Customer(**{k:d[k] for k in fields}, assigned_to=s.id if s else None)
+        db.session.add(c)
+        db.session.commit()
+        if s:
+            flash(f"\u5df2\u5206\u914d\u7ed9 {s.name}({s.region})","success")
+        else:
+            flash("\u5f55\u5165\u6210\u529f","success")
+        return redirect(url_for("smart_input"))
+    return render_template("smart.html",channels=CHANNELS,provinces=PROVINCES)
 
 @app.route("/export")
 def export_excel():
