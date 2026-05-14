@@ -1,17 +1,39 @@
 {% extends "base.html" %}
 {% block content %}
-<h3 class="mb-4">客户列表</h3>
+<div class="page-title mb-4">客户列表</div>
 <form class="row g-3 mb-4" method="GET">
 <div class="col-md-3"><select name="channel" class="form-select"><option value="">全部来源</option>{% for c in channels %}<option value="{{ c }}">{{ c }}</option>{% endfor %}</select></div>
 <div class="col-md-3"><select name="province" class="form-select"><option value="">全部省份</option>{% for p in provinces %}<option value="{{ p }}">{{ p }}</option>{% endfor %}</select></div>
 <div class="col-md-3"><select name="department" class="form-select"><option value="">全部归属</option>{% for d in departments %}<option value="{{ d }}">{{ d }}</option>{% endfor %}</select></div>
 <div class="col-md-2"><button type="submit" class="btn btn-primary">筛选</button></div>
 </form>
-<div class="table-responsive"><table class="table table-striped table-hover table-sm">
-<thead><tr><th>公司</th><th>联系人</th><th>电话</th><th>省份</th><th>来源</th><th>归属</th><th>产品</th><th>销售</th><th>时间</th></tr></thead>
-<tbody>{% for c in customers %}<tr>
-<td>{{ c.company_name }}</td><td>{{ c.contact_name }}</td><td>{{ c.phone }}</td><td>{{ c.province }}</td><td>{{ c.channel }}</td><td>{{ c.department }}</td><td>{{ c.product_interest }}</td>
-<td>{{ c.sales_person.name if c.sales_person else "未分配" }}</td><td>{{ c.created_at.strftime("%m-%d %H:%M") }}</td>
-</tr>{% endfor %}</tbody>
-</table></div>
+<div class="card">
+<div class="card-body p-0">
+<div class="table-responsive">
+<table class="table table-hover mb-0">
+<thead><tr><th>公司</th><th>联系人</th><th>电话</th><th>省份</th><th>来源</th><th>归属</th><th>产品</th><th>销售</th><th>时间</th><th>操作</th></tr></thead>
+<tbody>
+{% for c in customers %}
+<tr>
+<td>{{ c.company_name }}</td>
+<td>{{ c.contact_name }}</td>
+<td>{{ c.phone }}</td>
+<td>{{ c.province }}</td>
+<td>{{ c.channel }}</td>
+<td>{{ c.department }}</td>
+<td>{{ c.product_interest }}</td>
+<td>{{ c.sales_person.name if c.sales_person else "未分配" }}</td>
+<td>{{ c.created_at.strftime("%m-%d %H:%M") }}</td>
+<td>
+<form method="POST" action="/customer/{{ c.id }}/delete" onsubmit="return confirm('确定要删除这条客户记录吗？\n\n{{ c.contact_name }} - {{ c.phone }}\n\n删除后不可恢复！')">
+<button type="submit" class="btn btn-sm" style="color:#f54a45;background:none;border:none;padding:2px 6px;font-size:13px">删除</button>
+</form>
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+</div>
 {% endblock %}
