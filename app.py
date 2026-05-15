@@ -1,8 +1,10 @@
 import os
-from flask import Flask,render_template,request,redirect,url_for,flash,send_file
-from models import db,SalesPerson,Customer,REGION_MAPPING,CHANNELS,PROVINCES,DEPARTMENTS,SALES_MAP
+import requests as http_requests
+import base64
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file
+from models import db, SalesPerson, Customer, REGION_MAPPING, CHANNELS, PROVINCES, DEPARTMENTS, SALES_MAP
 from config import Config
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 from sqlalchemy import func
 from io import BytesIO
 
@@ -10,11 +12,13 @@ app = Flask(__name__)
 app.config.from_object(Config)
 db.init_app(app)
 
+
 def get_region(prov):
-    for r,ps in REGION_MAPPING.items():
+    for r, ps in REGION_MAPPING.items():
         if prov in ps:
             return r
-    return "\u5176\u4ed6"
+    return "其他"
+
 
 def assign(prov, dept):
     if prov in SALES_MAP and dept in SALES_MAP[prov]:
@@ -24,60 +28,80 @@ def assign(prov, dept):
             return s
     return None
 
+
 @app.route("/")
-@app.route("/smart", methods=["GET","POST"])
+@app.route("/smart", methods=["GET", "POST"])
 def smart_input():
-    if request.method=="POST":
-        fields = ["company_name","contact_name","phone","email","province","city","channel","department","product_interest","note"]
-        d = {k:request.form.get(k,"").strip() for k in fields}
-        if not all([d["contact_name"],d["phone"],d["province"],d["channel"],d["department"]]):
-            flash("\u8bf7\u586b\u5199\u5fc5\u586b\u9879","error")
+    if request.method == "POST":
+        fields = ["company_name", "contact_name", "phone", "email", "province", "city", "channel", "department", "product_interest", "note"]
+        d = {k: request.form.get(k, "").strip() for k in fields}
+        if not all([d["contact_name"], d["phone"], d["province"], d["channel"], d["department"]]):
+            flash("请填写必填项", "error")
             return redirect(url_for("smart_input"))
         s = assign(d["province"], d["department"])
-        c = Customer(company_name=d["company_name"],contact_name=d["contact_name"],phone=d["phone"],email=d["email"],province=d["province"],city=d["city"],channel=d["channel"],department=d["department"],product_interest=d["product_interest"],note=d["note"],assigned_to=s.id if s else None)
+        c = Customer(
+            company_name=d["company_name"],
+            contact_name=d["contact_name"],
+            phone=d["phone"],
+            email=d["email"],
+            province=d["province"],
+            city=d["city"],
+            channel=d["channel"],
+            department=d["department"],
+            product_interest=d["product_interest"],
+            note=d["note"],
+            assigned_to=s.id if s else None
+        )
         db.session.add(c)
         db.session.commit()
         if s:
-            flash(f"\u5df2\u5206\u914d\u7ed9 {s.name}({s.department}-{d['province']})","success")
+            flash(f"已分配给 {s.name}({s.department}-{d['province']})", "success")
         else:
-            flash("\u5f55\u5165\u6210\u529f\uff0c\u672a\u627e\u5230\u5bf9\u5e94\u9500\u552e","warning")
+            flash("录入成功，未找到对应销售", "warning")
         return redirect(url_for("smart_input"))
-    return render_template("smart.html",channels=CHANNELS,provinces=PROVINCES,departments=DEPARTMENTS)
+    return render_template("smart.html", channels=CHANNELS, provinces=PROVINCES, departments=DEPARTMENTS)
+
 
 @app.route("/dashboard")
 def dashboard():
     total = Customer.query.count()
     td = datetime.now().date()
-    td_c = Customer.query.filter(func.date(Customer.created_at)==td).count()
+    td_c = Customer.query.filter(func.date(Customer.created_at) == td).count()
     ws = td - timedelta(days=td.weekday())
-    wk_c = Customer.query.filter(Customer.created_at>=datetime.combine(ws,datetime.min.time())).count()
-    ch = db.session.query(Customer.channel,func.count(Customer.id)).group_by(Customer.channel).order_by(func.count(Customer.id).desc()).all()
-    dp = db.session.query(Customer.department,func.count(Customer.id)).group_by(Customer.department).order_by(func.count(Customer.id).desc()).all()
+    wk_c = Customer.query.filter(Customer.created_at >= datetime.combine(ws, datetime.min.time())).count()
+    ch = db.session.query(Customer.channel, func.count(Customer.id)).group_by(Customer.channel).order_by(func.count(Customer.id).desc()).all()
+    dp = db.session.query(Customer.department, func.count(Customer.id)).group_by(Customer.department).order_by(func.count(Customer.id).desc()).all()
     rg = {}
     for cu in Customer.query.all():
         r = get_region(cu.province)
-        rg[r] = rg.get(r,0)+1
-    ss = db.session.query(SalesPerson.name,SalesPerson.department,func.count(Customer.id)).join(Customer,Customer.assigned_to==SalesPerson.id).group_by(SalesPerson.id).order_by(func.count(Customer.id).desc()).all()
-    return render_template("dashboard.html",total_customers=total,today_count=td_c,week_count=wk_c,channel_stats=ch,dept_stats=dp,region_stats=rg,sales_stats=ss)
+        rg[r] = rg.get(r, 0) + 1
+    ss = db.session.query(SalesPerson.name, SalesPerson.department, func.count(Customer.id)).join(Customer, Customer.assigned_to == SalesPerson.id).group_by(SalesPerson.id).order_by(func.count(Customer.id).desc()).all()
+    return render_template("dashboard.html", total_customers=total, today_count=td_c, week_count=wk_c, channel_stats=ch, dept_stats=dp, region_stats=rg, sales_stats=ss)
+
 
 @app.route("/customers")
 def customer_list():
-    ch = request.args.get("channel","")
-    pv = request.args.get("province","")
-    dp = request.args.get("department","")
+    ch = request.args.get("channel", "")
+    pv = request.args.get("province", "")
+    dp = request.args.get("department", "")
     q = Customer.query
-    if ch: q = q.filter(Customer.channel==ch)
-    if pv: q = q.filter(Customer.province==pv)
-    if dp: q = q.filter(Customer.department==dp)
-    return render_template("customers.html",customers=q.order_by(Customer.created_at.desc()).all(),channels=CHANNELS,provinces=PROVINCES,departments=DEPARTMENTS)
+    if ch:
+        q = q.filter(Customer.channel == ch)
+    if pv:
+        q = q.filter(Customer.province == pv)
+    if dp:
+        q = q.filter(Customer.department == dp)
+    return render_template("customers.html", customers=q.order_by(Customer.created_at.desc()).all(), channels=CHANNELS, provinces=PROVINCES, departments=DEPARTMENTS)
 
-@app.route("/customer/<int:id>/delete", methods=["GET","POST"])
+
+@app.route("/customer/<int:id>/delete", methods=["GET", "POST"])
 def delete_customer(id):
     c = Customer.query.get_or_404(id)
     db.session.delete(c)
     db.session.commit()
-    flash("\u5df2\u5220\u9664","success")
+    flash("已删除", "success")
     return redirect(url_for("customer_list"))
+
 
 @app.route("/export")
 def export_excel():
@@ -85,24 +109,32 @@ def export_excel():
     custs = Customer.query.order_by(Customer.created_at.desc()).all()
     wb = Workbook()
     ws = wb.active
-    ws.append(["\u516c\u53f8","\u8054\u7cfb\u4eba","\u7535\u8bdd","\u7701\u4efd","\u57ce\u5e02","\u5ba2\u6237\u6765\u6e90","\u4ea7\u54c1\u5f52\u5c5e","\u54a8\u8be2\u4ea7\u54c1","\u9500\u552e","\u72b6\u6001","\u65f6\u95f4"])
+    ws.append(["公司", "联系人", "电话", "省份", "城市", "客户来源", "产品归属", "咨询产品", "销售", "状态", "时间"])
     for c in custs:
-        sn = c.sales_person.name if c.sales_person else "\u672a\u5206\u914d"
-        ws.append([c.company_name,c.contact_name,c.phone,c.province,c.city,c.channel,c.department,c.product_interest,sn,c.status,c.created_at.strftime("%Y-%m-%d %H:%M")])
+        sn = c.sales_person.name if c.sales_person else "未分配"
+        ws.append([c.company_name, c.contact_name, c.phone, c.province, c.city, c.channel, c.department, c.product_interest, sn, c.status, c.created_at.strftime("%Y-%m-%d %H:%M")])
     buf = BytesIO()
     wb.save(buf)
     buf.seek(0)
-    return send_file(buf,mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",as_attachment=True,download_name="customers.xlsx")
+    return send_file(buf, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", as_attachment=True, download_name="customers.xlsx")
 
-@app.route("/sales", methods=["GET","POST"])
+
+@app.route("/sales", methods=["GET", "POST"])
 def sales_manage():
-    if request.method=="POST":
-        s = SalesPerson(name=request.form["name"],phone=request.form.get("phone",""),wechat=request.form.get("wechat",""),region=request.form.get("region",""),department=request.form["department"])
+    if request.method == "POST":
+        s = SalesPerson(
+            name=request.form["name"],
+            phone=request.form.get("phone", ""),
+            wechat=request.form.get("wechat", ""),
+            region=request.form.get("region", ""),
+            department=request.form["department"]
+        )
         db.session.add(s)
         db.session.commit()
-        flash(f"{s.name} \u6dfb\u52a0\u6210\u529f","success")
+        flash(f"{s.name} 添加成功", "success")
         return redirect(url_for("sales_manage"))
-    return render_template("sales.html",sales_list=SalesPerson.query.filter_by(is_active=True).order_by(SalesPerson.department).all(),regions=list(REGION_MAPPING.keys()),departments=DEPARTMENTS)
+    return render_template("sales.html", sales_list=SalesPerson.query.filter_by(is_active=True).order_by(SalesPerson.department).all(), regions=list(REGION_MAPPING.keys()), departments=DEPARTMENTS)
+
 
 @app.route("/init_sales")
 def init_sales():
@@ -122,8 +154,47 @@ def init_sales():
     db.session.commit()
     return f"Done! Added {count} sales people. <a href='/sales'>View Sales</a> | <a href='/'>Home</a>"
 
-if __name__=="__main__":
+
+# ==================== 百度OCR图片识别 ====================
+
+def get_baidu_token():
+    url = "https://aip.baidubce.com/oauth/2.0/token"
+    params = {
+        "grant_type": "client_credentials",
+        "client_id": app.config["BAIDU_OCR_API_KEY"],
+        "client_secret": app.config["BAIDU_OCR_SECRET_KEY"]
+    }
+    resp = http_requests.post(url, params=params)
+    return resp.json().get("access_token")
+
+
+@app.route("/ocr", methods=["POST"])
+def ocr_recognize():
+    file = request.files.get("image")
+    if not file:
+        return {"success": False, "error": "没有上传图片"}
+    try:
+        img_data = base64.b64encode(file.read()).decode("utf-8")
+        token = get_baidu_token()
+        url = f"https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic?access_token={token}"
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        data = {"image": img_data, "language_type": "CHN_ENG"}
+        resp = http_requests.post(url, headers=headers, data=data)
+        result = resp.json()
+        if "words_result" in result:
+            lines = [item["words"] for item in result["words_result"]]
+            text = " ".join(lines)
+            return {"success": True, "text": text}
+        else:
+            return {"success": False, "error": result.get("error_msg", "识别失败")}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+# ==================== 启动 ====================
+
+if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     port = int(os.environ.get("PORT", 9999))
-    app.run(debug=False,host="0.0.0.0",port=port)
+    app.run(debug=False, host="0.0.0.0", port=port)
