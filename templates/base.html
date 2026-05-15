@@ -13,18 +13,15 @@ body{background:#f5f6f7;color:#1f2329}
 .nav-link{color:#646a73 !important;font-size:14px;padding:6px 16px !important;border-radius:6px;margin:0 2px}
 .nav-link:hover{color:#3370ff !important;background:#f0f4ff}
 .nav-link.active{color:#3370ff !important;background:#f0f4ff}
-
 .card{border:none;border-radius:10px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,0.06)}
 .card-header{background:#fff;border-bottom:1px solid #f0f1f2;padding:16px 20px;font-size:14px;font-weight:600;color:#1f2329}
 .card-body{padding:16px 20px}
-
 .table{font-size:13px;color:#1f2329;margin:0}
 .table thead th{background:#f8f9fa;color:#8f959e;font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:0.3px;border-bottom:1px solid #f0f1f2;padding:10px 16px}
 .table tbody td{padding:10px 16px;border-bottom:1px solid #f7f8fa;vertical-align:middle}
 .table tbody tr:hover{background:#f8f9ff}
 .table-borderless thead th{border:none}
 .table-borderless tbody td{border:none}
-
 .stat-row{display:flex;gap:16px;margin-bottom:24px}
 .stat-box{flex:1;background:#fff;border-radius:10px;padding:20px 24px;box-shadow:0 1px 2px rgba(0,0,0,0.06)}
 .stat-box .label{font-size:13px;color:#8f959e;margin-bottom:8px}
@@ -33,40 +30,33 @@ body{background:#f5f6f7;color:#1f2329}
 .stat-box.red .value{color:#f54a45}
 .stat-box.green .value{color:#34c724}
 .stat-box.purple .value{color:#7b67ee}
-
 .btn-primary{background:#3370ff;border:none;border-radius:6px;font-size:14px;padding:8px 20px}
 .btn-primary:hover{background:#245bdb}
 .btn-success{background:#34c724;border:none;border-radius:6px}
 .btn-success:hover{background:#2ba81e}
 .btn-warning{background:#ff7d00;border:none;color:#fff;border-radius:6px}
 .btn-warning:hover{background:#e06d00;color:#fff}
-
 .form-control,.form-select{border:1px solid #dee0e3;border-radius:6px;font-size:14px;padding:8px 12px}
 .form-control:focus,.form-select:focus{border-color:#3370ff;box-shadow:0 0 0 2px rgba(51,112,255,0.1)}
 .form-label{font-size:13px;color:#646a73;font-weight:500;margin-bottom:4px}
-
 .alert{border-radius:8px;font-size:14px;border:none}
 .alert-success{background:#f0fff0;color:#1a8917}
 .alert-warning{background:#fff8f0;color:#d4760a}
 .alert-danger{background:#fff0f0;color:#d83931}
-
 .badge{font-size:12px;font-weight:500;padding:3px 8px;border-radius:4px}
 .page-title{font-size:18px;font-weight:600;color:#1f2329}
-
 .progress{height:4px;border-radius:2px;background:#f0f1f2}
 .progress-bar{background:#3370ff;border-radius:2px}
-
 .input-group .form-control{border-right:none}
 .input-group .btn{border-radius:0 6px 6px 0}
-
 .container{max-width:1200px}
 </style>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg">
 <div class="container">
-<a class="navbar-brand" href="/">
-<svg width="20" height="20" viewBox="0 0 20 20" fill="none" style="margin-right:6px;vertical-align:-3px"><rect width="20" height="20" rx="5" fill="#3370ff"/><path d="M6 10h8M10 6v8" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+<a class="navbar-brand d-flex align-items-center" href="/">
+<img src="{{ url_for('static', filename='logo.png') }}" alt="净信" style="height:32px;width:auto;margin-right:8px;">
 上海净信 CRM</a>
 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nv"><span class="navbar-toggler-icon"></span></button>
 <div class="collapse navbar-collapse" id="nv">
