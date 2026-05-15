@@ -22,7 +22,6 @@
 </label>
 <input type="file" id="imageUpload" accept="image/*" style="display:none" onchange="handleImageUpload(this)">
 <button class="btn btn-outline-secondary mb-0" style="font-size:14px;" onclick="pasteFromClipboard()">📋 粘贴剪贴板图片</button>
-<span style="font-size:12px;color:#8f959e;">支持 Ctrl+V 直接粘贴截图</span>
 <span id="ocrStatus" style="font-size:13px;color:#8f959e;margin-left:auto;"></span>
 </div>
 <div id="imagePreview" style="display:none;margin-top:10px;">
@@ -181,7 +180,7 @@ document.addEventListener('paste', function(e){
     }
 });
 
-// ==================== 原有文字解析功能 ====================
+// ==================== 文字解析功能 ====================
 
 function parseText(){
     var t = document.getElementById("rawText").value;
@@ -282,14 +281,16 @@ function parseText(){
         if(m){foundCompany=m[1];document.getElementById("f_company").value=m[1];break;}
     }
 
-    // ===== 4. CONTACT NAME =====
+    // ===== 4. CONTACT NAME（增强版） =====
     var foundName = "";
+    var titleSuffixes = ["女士","先生","老师","教授","博士","主任","院长","所长","工程师","经理","总监","总","处长","科长","部长","组长","队长","厂长","书记","医生","护士","师傅"];
+
     function isNotName(text){
         if(!text) return true;
         for(var i=0;i<productParts.length;i++){
             if(productParts[i].indexOf(text)>=0||text.indexOf(productParts[i])>=0) return true;
         }
-        var badWords = ["实验","研磨","粉碎","均质","筛分","球磨","匀浆","破碎","振动","转动","旋转","冷冻","离心","浓缩","打断","脱泡","搅拌","培养","载玻","灌流","成像","趋化","筛","磨","仪","机","室","咨询","了解","需要","想要","购买","采购","询价","报价","经销商","经销","客户","也在"];
+        var badWords = ["实验","研磨","粉碎","均质","筛分","球磨","匀浆","破碎","振动","转动","旋转","冷冻","离心","浓缩","打断","脱泡","搅拌","培养","载玻","灌流","成像","趋化","筛","磨","仪","机","室","咨询","了解","需要","想要","购买","采购","询价","报价","经销商","经销","客户","也在","尽快","联系","悬液","制备","单细胞","真空","超声","高压","高通量"];
         for(var i=0;i<badWords.length;i++){
             if(text.indexOf(badWords[i])>=0) return true;
         }
@@ -300,33 +301,83 @@ function parseText(){
         if(foundCompany && foundCompany.indexOf(text)>=0) return true;
         return false;
     }
-    for(var i=0;i<parts.length;i++){
-        var p = parts[i].trim();
-        if(/\d/.test(p)) continue;
-        if(p.length>4) continue;
-        if(p.length==1 && surnames.indexOf(p)>=0){
-            foundName = p;
-            break;
-        }
-        if(p.length>=2 && p.length<=3 && /^[\u4e00-\u9fa5]+$/.test(p)){
-            if(surnames.indexOf(p[0])>=0 && !isNotName(p)){
-                foundName = p;
+
+    // 方法A：匹配"姓+称呼"格式，如"朱女士"、"张先生"、"李老师"
+    for(var i=0;i<titleSuffixes.length;i++){
+        var suffix = titleSuffixes[i];
+        var reg = new RegExp("([\\u4e00-\\u9fa5]{1,2})" + suffix);
+        var m = t.match(reg);
+        if(m){
+            var namePart = m[1];
+            if(surnames.indexOf(namePart[0])>=0 && !isNotName(namePart)){
+                foundName = m[0]; // 包含称呼，如"朱女士"
                 break;
             }
         }
     }
+
+    // 方法B：空格分隔的词中找2-3字姓名
+    if(!foundName){
+        for(var i=0;i<parts.length;i++){
+            var p = parts[i].trim();
+            if(/\d/.test(p)) continue;
+            if(p.length>4) continue;
+            // 先检查这个词是否包含称呼
+            var hasTitle = false;
+            for(var ti=0;ti<titleSuffixes.length;ti++){
+                if(p.indexOf(titleSuffixes[ti])>=0){
+                    var beforeTitle = p.replace(titleSuffixes[ti],"");
+                    if(beforeTitle.length>=1 && beforeTitle.length<=2 && surnames.indexOf(beforeTitle[0])>=0 && !isNotName(beforeTitle)){
+                        foundName = p;
+                        hasTitle = true;
+                        break;
+                    }
+                }
+            }
+            if(hasTitle) break;
+            if(p.length==1 && surnames.indexOf(p)>=0){
+                foundName = p;
+                break;
+            }
+            if(p.length>=2 && p.length<=3 && /^[\u4e00-\u9fa5]+$/.test(p)){
+                if(surnames.indexOf(p[0])>=0 && !isNotName(p)){
+                    foundName = p;
+                    break;
+                }
+            }
+        }
+    }
+
+    // 方法C：正则匹配"我是/我叫"
     if(!foundName){
         var m1 = t.match(/我(?:是|叫)([\u4e00-\u9fa5]{2,3})/);
         if(m1 && !isNotName(m1[1])) foundName = m1[1];
     }
+
+    // 方法D：正则匹配"姓名+职位"
     if(!foundName){
         var m2 = t.match(/([\u4e00-\u9fa5]{2,3})(?:老师|教授|博士|主任|院长|所长|工程师|经理|总)/);
         if(m2 && !isNotName(m2[1])) foundName = m2[1];
     }
+
+    // 方法E：正则匹配"联系人：xxx"
     if(!foundName){
         var m3 = t.match(/(?:联系人|姓名|客户|名字)[：:\s]*([\u4e00-\u9fa5]{2,3})/);
         if(m3 && !isNotName(m3[1])) foundName = m3[1];
     }
+
+    // 方法F：从连续文本中提取"姓+女士/先生"
+    if(!foundName){
+        var titleReg = /([\u4e00-\u9fa5])(?:女士|先生|老师)/g;
+        var tm;
+        while((tm = titleReg.exec(t)) !== null){
+            if(surnames.indexOf(tm[1])>=0){
+                foundName = tm[0];
+                break;
+            }
+        }
+    }
+
     if(foundName) document.getElementById("f_name").value = foundName;
 
     // ===== 5. CITY TO PROVINCE =====
@@ -407,7 +458,7 @@ function parseText(){
     }
 
     // ===== 7. NOTE =====
-     document.getElementById("f_note").value = t;
+    document.getElementById("f_note").value = t;
 }
 </script>
 {% endblock %}
