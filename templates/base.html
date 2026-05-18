@@ -50,6 +50,8 @@ body{background:#f5f6f7;color:#1f2329}
 .input-group .form-control{border-right:none}
 .input-group .btn{border-radius:0 6px 6px 0}
 .container{max-width:1200px}
+.user-info{font-size:13px;color:#646a73;display:flex;align-items:center;gap:8px}
+.user-info .username{color:#1f2329;font-weight:500}
 </style>
 </head>
 <body>
@@ -60,13 +62,24 @@ body{background:#f5f6f7;color:#1f2329}
 </a>
 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nv"><span class="navbar-toggler-icon"></span></button>
 <div class="collapse navbar-collapse" id="nv">
+{% if current_user.is_authenticated %}
 <div class="navbar-nav ms-auto">
 <a class="nav-link" href="/smart">智能录入</a>
 <a class="nav-link" href="/dashboard">数据看板</a>
 <a class="nav-link" href="/customers">客户列表</a>
 <a class="nav-link" href="/sales">销售管理</a>
 <a class="nav-link" href="/export">导出</a>
-</div></div></div></nav>
+{% if current_user.is_admin %}
+<a class="nav-link" href="/users">用户管理</a>
+{% endif %}
+</div>
+<div class="user-info ms-3">
+<span class="username">{{ current_user.display_name or current_user.username }}</span>
+<a href="/change_password" class="nav-link py-0 px-1" style="font-size:12px;" title="修改密码">🔑</a>
+<a href="/logout" class="nav-link py-0 px-1" style="font-size:12px;color:#f54a45 !important;">退出</a>
+</div>
+{% endif %}
+</div></div></nav>
 <div class="container mt-4 mb-5">
 {% with messages = get_flashed_messages(with_categories=true) %}
 {% for cat, msg in messages %}
