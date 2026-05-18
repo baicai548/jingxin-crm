@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+<div class="col-md-8">
+<div class="card">
+<div class="card-header"><b>用户列表</b></div>
+<div class="card-body p-0">
+<table class="table">
+<thead>
+<tr>
+<th>用户名</th>
+<th>显示名</th>
+<th>角色</th>
+<th>创建时间</th>
+<th>操作</th>
+</tr>
+</thead>
+<tbody>
+{% for user in users %}
+<tr>
+<td>{{ user.username }}</td>
+<td>{{ user.display_name }}</td>
+<td>
+{% if user.is_admin %}
+<span class="badge" style="background:#3370ff;">管理员</span>
+{% else %}
+<span class="badge" style="background:#8f959e;">普通用户</span>
+{% endif %}
+</td>
+<td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+<td>
+<form method="POST" action="/users/{{ user.id }}/reset" class="d-inline">
+<div class="input-group input-group-sm" style="width:200px;">
+<input type="password" name="new_password" class="form-control" placeholder="新密码" minlength="4" required style="font-size:12px;">
+<button type="submit" class="btn btn-outline-primary" style="font-size:12px;" onclick="return confirm('确认重置密码？')">重置</button>
+</div>
+</form>
+{% if user.id != current_user.id %}
+<form method="POST" action="/users/{{ user.id }}/delete" class="d-inline ms-1">
+<button type="submit" class="btn btn-outline-danger btn-sm" style="font-size:12px;" onclick="return confirm('确认删除用户 {{ user.username }}？')">删除</button>
+</form>
+{% endif %}
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="col-md-4">
+<div class="card">
+<div class="card-header"><b>添加用户</b></div>
+<div class="card-body">
+<form method="POST" action="/users/add">
+<div class="mb-2">
+<label class="form-label">用户名 <span class="text-danger">*</span></label>
+<input type="text" name="username" class="form-control" required>
+</div>
+<div class="mb-2">
+<label class="form-label">密码 <span class="text-danger">*</span></label>
+<input type="password" name="password" class="form-control" required minlength="4">
+</div>
+<div class="mb-2">
+<label class="form-label">显示名称</label>
+<input type="text" name="display_name" class="form-control" placeholder="如不填则使用用户名">
+</div>
+<div class="mb-3">
+<div class="form-check">
+<input class="form-check-input" type="checkbox" name="is_admin" id="isAdmin">
+<label class="form-check-label" for="isAdmin">设为管理员</label>
+</div>
+</div>
+<button type="submit" class="btn btn-primary w-100">添加用户</button>
+</form>
+</div>
+</div>
+</div>
+</div>
+{% endblock %}
