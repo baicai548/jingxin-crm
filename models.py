@@ -15,6 +15,7 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     is_active_user = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
+    created_customers = db.relationship("Customer", backref="creator", lazy=True, foreign_keys="Customer.created_by")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -32,7 +33,7 @@ class SalesPerson(db.Model):
     region = db.Column(db.String(50), nullable=False, default='')
     department = db.Column(db.String(20), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
-    customers = db.relationship("Customer", backref="sales_person", lazy=True)
+    customers = db.relationship("Customer", backref="sales_person", lazy=True, foreign_keys="Customer.assigned_to")
 
 
 class Customer(db.Model):
@@ -51,6 +52,7 @@ class Customer(db.Model):
     status = db.Column(db.String(20), default="新线索")
     created_at = db.Column(db.DateTime, default=datetime.now)
     assigned_to = db.Column(db.Integer, db.ForeignKey("sales_person.id"))
+    created_by = db.Column(db.Integer, db.ForeignKey("user.id"))
 
 
 REGION_MAPPING = {
