@@ -191,7 +191,8 @@ def smart_input():
             phone=d["phone"], email=d["email"], province=d["province"],
             city=d["city"], channel=d["channel"], department=d["department"],
             product_interest=d["product_interest"], note=d["note"],
-            assigned_to=s.id if s else None
+            assigned_to=s.id if s else None,
+            created_by=current_user.id
         )
         db.session.add(c)
         db.session.commit()
@@ -254,10 +255,11 @@ def export_excel():
     custs = Customer.query.order_by(Customer.created_at.desc()).all()
     wb = Workbook()
     ws = wb.active
-    ws.append(["公司", "联系人", "电话", "省份", "城市", "客户来源", "产品归属", "咨询产品", "销售", "状态", "时间"])
+    ws.append(["公司", "联系人", "电话", "省份", "城市", "客户来源", "产品归属", "咨询产品", "销售", "录入人", "状态", "时间"])
     for c in custs:
         sn = c.sales_person.name if c.sales_person else "未分配"
-        ws.append([c.company_name, c.contact_name, c.phone, c.province, c.city, c.channel, c.department, c.product_interest, sn, c.status, c.created_at.strftime("%Y-%m-%d %H:%M")])
+        creator_name = c.creator.display_name if c.creator else "未知"
+        ws.append([c.company_name, c.contact_name, c.phone, c.province, c.city, c.channel, c.department, c.product_interest, sn, creator_name, c.status, c.created_at.strftime("%Y-%m-%d %H:%M")])
     buf = BytesIO()
     wb.save(buf)
     buf.seek(0)
