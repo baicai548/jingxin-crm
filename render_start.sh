@@ -1,9 +1,3 @@
-#!/bin/bash
-python -c "
-from app import app
-from models import db
-with app.app_context():
-    db.create_all()
-    print('DB OK')
-"
+#!/usr/bin/env bash
+python -c "from app import app, db; app.app_context().push(); db.create_all(); print('Tables created!')"
 gunicorn app:app --bind 0.0.0.0:$PORT
