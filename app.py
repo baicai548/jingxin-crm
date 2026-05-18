@@ -1,12 +1,19 @@
 import os
-import requests as http_requests
-import base64
+
+# 修复 Render PostgreSQL URL
+database_url = os.environ.get('DATABASE_URL', '')
+if database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    os.environ['DATABASE_URL'] = database_url
+
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file
 from models import db, SalesPerson, Customer, REGION_MAPPING, CHANNELS, PROVINCES, DEPARTMENTS, SALES_MAP
 from config import Config
 from datetime import datetime, timedelta
 from sqlalchemy import func
 from io import BytesIO
+import requests as http_requests
+import base64
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -40,16 +47,10 @@ def smart_input():
             return redirect(url_for("smart_input"))
         s = assign(d["province"], d["department"])
         c = Customer(
-            company_name=d["company_name"],
-            contact_name=d["contact_name"],
-            phone=d["phone"],
-            email=d["email"],
-            province=d["province"],
-            city=d["city"],
-            channel=d["channel"],
-            department=d["department"],
-            product_interest=d["product_interest"],
-            note=d["note"],
+            company_name=d["company_name"], contact_name=d["contact_name"],
+            phone=d["phone"], email=d["email"], province=d["province"],
+            city=d["city"], channel=d["channel"], department=d["department"],
+            product_interest=d["product_interest"], note=d["note"],
             assigned_to=s.id if s else None
         )
         db.session.add(c)
@@ -122,13 +123,7 @@ def export_excel():
 @app.route("/sales", methods=["GET", "POST"])
 def sales_manage():
     if request.method == "POST":
-        s = SalesPerson(
-            name=request.form["name"],
-            phone=request.form.get("phone", ""),
-            wechat=request.form.get("wechat", ""),
-            region=request.form.get("region", ""),
-            department=request.form["department"]
-        )
+        s = SalesPerson(name=request.form["name"], phone=request.form.get("phone", ""), wechat=request.form.get("wechat", ""), region=request.form.get("region", ""), department=request.form["department"])
         db.session.add(s)
         db.session.commit()
         flash(f"{s.name} 添加成功", "success")
@@ -155,7 +150,7 @@ def init_sales():
     return f"Done! Added {count} sales people. <a href='/sales'>View Sales</a> | <a href='/'>Home</a>"
 
 
-# ==================== 百度OCR图片识别 ====================
+# ==================== 百度OCR接口 ====================
 
 def get_baidu_token():
     url = "https://aip.baidubce.com/oauth/2.0/token"
@@ -190,8 +185,6 @@ def ocr_recognize():
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-
-# ==================== 启动 ====================
 
 if __name__ == "__main__":
     with app.app_context():
