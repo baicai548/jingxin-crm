@@ -1,17 +1,50 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-title mb-4">客户列表</div>
-<form class="row g-3 mb-4" method="GET">
-<div class="col-md-3"><select name="channel" class="form-select"><option value="">全部来源</option>{% for c in channels %}<option value="{{ c }}">{{ c }}</option>{% endfor %}</select></div>
-<div class="col-md-3"><select name="province" class="form-select"><option value="">全部省份</option>{% for p in provinces %}<option value="{{ p }}">{{ p }}</option>{% endfor %}</select></div>
-<div class="col-md-3"><select name="department" class="form-select"><option value="">全部归属</option>{% for d in departments %}<option value="{{ d }}">{{ d }}</option>{% endfor %}</select></div>
-<div class="col-md-2"><button type="submit" class="btn btn-primary">筛选</button></div>
-</form>
 <div class="card">
-<div class="card-body p-0">
+<div class="card-header d-flex justify-content-between align-items-center">
+<b>客户列表</b>
+</div>
+<div class="card-body">
+<form class="row g-2 mb-3" method="GET">
+<div class="col-md-3">
+<select name="channel" class="form-select">
+<option value="">全部来源</option>
+{% for c in channels %}<option value="{{ c }}" {{ 'selected' if request.args.get('channel')==c }}>{{ c }}</option>{% endfor %}
+</select>
+</div>
+<div class="col-md-3">
+<select name="province" class="form-select">
+<option value="">全部省份</option>
+{% for p in provinces %}<option value="{{ p }}" {{ 'selected' if request.args.get('province')==p }}>{{ p }}</option>{% endfor %}
+</select>
+</div>
+<div class="col-md-3">
+<select name="department" class="form-select">
+<option value="">全部归属</option>
+{% for d in departments %}<option value="{{ d }}" {{ 'selected' if request.args.get('department')==d }}>{{ d }}</option>{% endfor %}
+</select>
+</div>
+<div class="col-md-3">
+<button type="submit" class="btn btn-primary">筛选</button>
+</div>
+</form>
 <div class="table-responsive">
-<table class="table table-hover mb-0">
-<thead><tr><th>公司</th><th>联系人</th><th>电话</th><th>省份</th><th>来源</th><th>归属</th><th>产品</th><th>销售</th><th>时间</th><th>操作</th></tr></thead>
+<table class="table">
+<thead>
+<tr>
+<th>公司</th>
+<th>联系人</th>
+<th>电话</th>
+<th>省份</th>
+<th>来源</th>
+<th>归属</th>
+<th>产品</th>
+<th>销售</th>
+<th>录入人</th>
+<th>时间</th>
+<th>操作</th>
+</tr>
+</thead>
 <tbody>
 {% for c in customers %}
 <tr>
@@ -22,15 +55,15 @@
 <td>{{ c.channel }}</td>
 <td>{{ c.department }}</td>
 <td>{{ c.product_interest }}</td>
-<td>{{ c.sales_person.name if c.sales_person else "未分配" }}</td>
-<td>{{ c.created_at.strftime("%m-%d %H:%M") }}</td>
-<td>
-<form method="POST" action="/customer/{{ c.id }}/delete" onsubmit="return confirm('确定要删除吗？')">
-<button type="submit" class="btn btn-sm" style="color:#f54a45;background:none;border:none;padding:2px 6px;font-size:13px">删除</button>
-</form>
-</td>
+<td>{{ c.sales_person.name if c.sales_person else '未分配' }}</td>
+<td><span style="color:#3370ff;">{{ c.creator.display_name if c.creator else '未知' }}</span></td>
+<td>{{ c.created_at.strftime('%m-%d %H:%M') }}</td>
+<td><a href="/customer/{{ c.id }}/delete" class="text-danger" onclick="return confirm('确认删除？')">删除</a></td>
 </tr>
 {% endfor %}
+{% if not customers %}
+<tr><td colspan="11" class="text-center" style="color:#8f959e;padding:40px;">暂无数据</td></tr>
+{% endif %}
 </tbody>
 </table>
 </div>
