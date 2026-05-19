@@ -173,6 +173,23 @@ def user_reset_password(id):
     return redirect(url_for("user_manage"))
 
 
+@app.route("/users/<int:id>/rename", methods=["POST"])
+@login_required
+def user_rename(id):
+    if not current_user.is_admin:
+        flash("没有权限", "error")
+        return redirect(url_for("smart_input"))
+    user = User.query.get_or_404(id)
+    new_name = request.form.get("new_name", "").strip()
+    if not new_name:
+        flash("名称不能为空", "error")
+        return redirect(url_for("user_manage"))
+    user.display_name = new_name
+    db.session.commit()
+    flash(f"用户 {user.username} 的显示名已改为 {new_name}", "success")
+    return redirect(url_for("user_manage"))
+
+
 # ==================== 业务功能 ====================
 
 @app.route("/", methods=["GET", "POST"])
