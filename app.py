@@ -175,7 +175,7 @@ def user_reset_password(id):
 
 # ==================== 业务功能 ====================
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 @app.route("/smart", methods=["GET", "POST"])
 @login_required
 def smart_input():
