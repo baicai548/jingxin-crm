@@ -64,7 +64,6 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password) and user.is_active_user:
             login_user(user)
-            flash(f"欢迎回来，{user.display_name or user.username}！", "success")
             next_page = request.args.get("next")
             return redirect(next_page or url_for("smart_input"))
         else:
