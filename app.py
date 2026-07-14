@@ -317,13 +317,15 @@ def init_sales():
 
 @app.route("/init_admin")
 def init_admin():
-    if User.query.filter_by(username="admin").first():
-        return "管理员账号已存在！<a href='/login'>去登录</a>"
+    old = User.query.filter_by(username="admin").first()
+    if old:
+        db.session.delete(old)
+        db.session.commit()
     admin = User(username="admin", display_name="管理员", is_admin=True)
-    admin.set_password("admin123")
+    admin.set_password("admin")
     db.session.add(admin)
     db.session.commit()
-    return "管理员账号创建成功！<br>用户名：admin<br>密码：admin123<br><a href='/login'>去登录</a>"
+    return "管理员账号创建成功！<br>用户名：admin<br>密码：admin<br><a href='/login'>去登录</a>"
 
 
 # ==================== 百度OCR接口 ====================
